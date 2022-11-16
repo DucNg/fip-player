@@ -1,10 +1,11 @@
-package main
+package metadata
 
 import (
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 type FipMetadata struct {
@@ -16,10 +17,16 @@ type FipMetadata struct {
 		SecondLine struct {
 			Title string
 		}
+		Song struct {
+			Id   string
+			Year uint
+		}
+		StartTime uint
+		EndTime   uint
 	}
 }
 
-func fetchMetadata() FipMetadata {
+func FetchMetadata() FipMetadata {
 	res, err := http.Get("https://www.radiofrance.fr/api/v2.0/stations/fip/live")
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -35,4 +42,8 @@ func fetchMetadata() FipMetadata {
 	}
 
 	return metatdata
+}
+
+func (fm *FipMetadata) Duration() time.Duration {
+	return time.Duration(fm.Now.EndTime-fm.Now.StartTime) * time.Microsecond
 }

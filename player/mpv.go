@@ -1,4 +1,4 @@
-package main
+package player
 
 // #include <mpv/client.h>
 // #include <stdlib.h>
@@ -36,7 +36,7 @@ type MPV struct {
 var logLibMPV = flag.Bool("log-libmpv", false, "log output of libmpv")
 
 // New creates a new MPV instance and initializes the libmpv player
-func (mpv *MPV) initialize() (chan State, int) {
+func (mpv *MPV) Initialize() (chan State, int) {
 	if mpv.handle != nil || mpv.running {
 		panic("already initialized")
 	}
@@ -138,7 +138,7 @@ func (mpv *MPV) setOption(key string, format C.mpv_format, value unsafe.Pointer)
 }
 
 // sendCommand sends a command to the libmpv player
-func (mpv *MPV) sendCommand(command []string) {
+func (mpv *MPV) SendCommand(command []string) {
 	// Print command, but without the stream
 	cmd := make([]string, len(command))
 	copy(cmd, command)
@@ -217,7 +217,7 @@ func (mpv *MPV) play(stream string, position time.Duration, volume int) {
 	if !strings.HasPrefix(stream, "https://") {
 		log.Panic("Stream does not start with https://...")
 	}
-	mpv.sendCommand([]string{"loadfile", "http://localhost:8008/proxy/" + stream[len("https://"):], "replace", options})
+	mpv.SendCommand([]string{"loadfile", "http://localhost:8008/proxy/" + stream[len("https://"):], "replace", options})
 }
 
 func (mpv *MPV) pause() {
@@ -240,7 +240,7 @@ func (mpv *MPV) getDuration() (time.Duration, error) {
 	return time.Duration(duration * float64(time.Second)), nil
 }
 
-func (mpv *MPV) getPosition() (time.Duration, error) {
+func (mpv *MPV) GetPosition() (time.Duration, error) {
 	position, err := mpv.getProperty("time-pos")
 	if err == MPV_PROPERTY_UNAVAILABLE {
 		return 0, PROPERTY_UNAVAILABLE
@@ -258,7 +258,7 @@ func (mpv *MPV) getPosition() (time.Duration, error) {
 }
 
 func (mpv *MPV) setPosition(position time.Duration) {
-	mpv.sendCommand([]string{"seek", fmt.Sprintf("%.3f", position.Seconds()), "absolute"})
+	mpv.SendCommand([]string{"seek", fmt.Sprintf("%.3f", position.Seconds()), "absolute"})
 }
 
 // func (mpv *MPV) getVolume() int {
@@ -277,7 +277,7 @@ func (mpv *MPV) setPosition(position time.Duration) {
 // }
 
 func (mpv *MPV) stop() {
-	mpv.sendCommand([]string{"stop"})
+	mpv.SendCommand([]string{"stop"})
 }
 
 // playerEventHandler waits for libmpv player events and sends them on a channel

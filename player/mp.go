@@ -1,4 +1,4 @@
-package main
+package player
 
 // This library is a wrapper around a media player that plays YouTube playlists.
 

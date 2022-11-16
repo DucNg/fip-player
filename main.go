@@ -2,19 +2,28 @@ package main
 
 import (
 	"fmt"
+	"log"
+
+	"github.com/DucNg/fip-player/dbus"
+	"github.com/DucNg/fip-player/metadata"
+	"github.com/DucNg/fip-player/player"
 )
 
 func main() {
-	metadata := fetchMetadata()
+	log.SetFlags(log.Lshortfile) // Enable line number on error
+
+	metadata := metadata.FetchMetadata()
 	fmt.Println(metadata.Now.FirstLine.Title + metadata.Now.SecondLine.Title)
 
-	mpv := &MPV{}
-	mpvChan, _ := mpv.initialize()
-	mpv.sendCommand([]string{"loadfile", "https://stream.radiofrance.fr/fip/fip.m3u8?id=radiofrance"})
+	mpv := &player.MPV{}
+	mpvChan, _ := mpv.Initialize()
+	mpv.SendCommand([]string{"loadfile", "https://stream.radiofrance.fr/fip/fip.m3u8?id=radiofrance"})
+
+	go dbus.RunDbusListener(mpv)
 
 	for event := range mpvChan {
 		switch event {
-		case STATE_PLAYING:
+		case player.STATE_PLAYING:
 			fmt.Println("Playing...")
 		}
 	}
