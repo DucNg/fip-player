@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/DucNg/fip-player/metadata"
 	"github.com/DucNg/fip-player/player"
@@ -64,6 +65,11 @@ func RunDbusListener(mpv *player.MPV) {
 		log.Fatalln("Name already taken")
 	}
 	fmt.Println("D-Bus listening")
+
+	go func() {
+		UpdateMetadata(ins)
+	}()
+
 	select {}
 }
 
@@ -84,9 +90,16 @@ func GetMetadata() MetadataMap {
 	return *m
 }
 
-// func UpdateMetadata() {
-// 	dbusErr := ins.props.Set("org.mpris.MediaPlayer2.Player", "Metadata", dbus.MakeVariant(GetMetadata()))
-// 	if dbusErr != nil {
-// 		log.Fatalln(dbusErr)
-// 	}
-// }
+func UpdateMetadata(ins *Instance) {
+	fm := metadata.FetchMetadata()
+
+	dbusErr := ins.props.Set("org.mpris.MediaPlayer2.Player", "Metadata", dbus.MakeVariant(GetMetadata()))
+	if dbusErr != nil {
+		log.Fatalln(dbusErr)
+	}
+
+	fmt.Println("updating metadata " + fm.Now.FirstLine.Title)
+
+	time.Sleep(fm.Delay())
+	UpdateMetadata(ins)
+}

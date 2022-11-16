@@ -5,15 +5,11 @@ import (
 	"log"
 
 	"github.com/DucNg/fip-player/dbus"
-	"github.com/DucNg/fip-player/metadata"
 	"github.com/DucNg/fip-player/player"
 )
 
 func main() {
 	log.SetFlags(log.Lshortfile) // Enable line number on error
-
-	metadata := metadata.FetchMetadata()
-	fmt.Println(metadata.Now.FirstLine.Title + metadata.Now.SecondLine.Title)
 
 	mpv := &player.MPV{}
 	mpvChan, _ := mpv.Initialize()

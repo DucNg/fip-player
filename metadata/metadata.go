@@ -47,3 +47,7 @@ func FetchMetadata() FipMetadata {
 func (fm *FipMetadata) Duration() time.Duration {
 	return time.Duration(fm.Now.EndTime-fm.Now.StartTime) * time.Microsecond
 }
+
+func (fm *FipMetadata) Delay() time.Duration {
+	return time.Duration(fm.DelayToRefresh) * time.Millisecond
+}
