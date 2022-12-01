@@ -27,11 +27,10 @@ func (m *MediaPlayer2) properties() map[string]*prop.Prop {
 }
 
 func (m *MediaPlayer2) playerProps() map[string]*prop.Prop {
-
 	return map[string]*prop.Prop{
 		"PlaybackStatus": newProp("Playing", nil),
 		"Rate":           newProp(1.0, notImplemented),
-		"Metadata":       newProp(GetMetadata(), nil),
+		"Metadata":       newProp(MetadataMap{}, nil),
 		"Volume":         newProp(float64(100), nil),
 		"Position":       newProp(int64(0), nil),
 		"MinimumRate":    newProp(1.0, nil),

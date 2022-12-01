@@ -35,13 +35,15 @@ func FetchMetadata() FipMetadata {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	var metatdata FipMetadata
-	err = json.Unmarshal(jsonRes, &metatdata)
+	var metadata FipMetadata
+	err = json.Unmarshal(jsonRes, &metadata)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	return metatdata
+	log.Printf("Received %#v from FIP API\n", metadata)
+
+	return metadata
 }
 
 func (fm *FipMetadata) Duration() time.Duration {

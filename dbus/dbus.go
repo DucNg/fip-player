@@ -73,13 +73,20 @@ func RunDbusListener(mpv *player.MPV) {
 	select {}
 }
 
-func GetMetadata() MetadataMap {
+func GetMetadata() (MetadataMap, time.Duration) {
 	fm := metadata.FetchMetadata()
 
 	id := strings.ReplaceAll(fm.Now.Song.Id, "-", "")
 
+	var trackId string
+	if id == "" {
+		trackId = "/org/mpris/MediaPlayer2/TrackList/NoTrack"
+	} else {
+		trackId = "/org/mpris/MediaPlayer2/" + id
+	}
+
 	m := &MetadataMap{
-		"mpris:trackid": dbus.ObjectPath("/org/mpris/MediaPlayer2/" + id),
+		"mpris:trackid": dbus.ObjectPath(trackId),
 		"mpris:length":  fm.Duration(),
 
 		"xesam:title":       fm.Now.FirstLine.Title,
@@ -87,19 +94,17 @@ func GetMetadata() MetadataMap {
 		"xesam:albumArtist": fm.Now.SecondLine.Title,
 	}
 
-	return *m
+	return *m, fm.Delay()
 }
 
 func UpdateMetadata(ins *Instance) {
-	fm := metadata.FetchMetadata()
+	metadata, delayToRefresh := GetMetadata()
 
-	dbusErr := ins.props.Set("org.mpris.MediaPlayer2.Player", "Metadata", dbus.MakeVariant(GetMetadata()))
+	dbusErr := ins.props.Set("org.mpris.MediaPlayer2.Player", "Metadata", dbus.MakeVariant(metadata))
 	if dbusErr != nil {
-		log.Fatalln(dbusErr)
+		log.Println(dbusErr, metadata)
 	}
 
-	fmt.Println("updating metadata " + fm.Now.FirstLine.Title)
-
-	time.Sleep(fm.Delay())
+	time.Sleep(delayToRefresh)
 	UpdateMetadata(ins)
 }
