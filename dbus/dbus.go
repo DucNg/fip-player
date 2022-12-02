@@ -32,7 +32,7 @@ func RunDbusListener(mpv *player.MPV) {
 	ins := &Instance{
 		name: fmt.Sprintf("org.mpris.MediaPlayer2.fipPlayer.instance%d", os.Getpid()),
 	}
-	mp2 := &MediaPlayer2{Instance: ins, mpv: mpv}
+	mp2 := &MediaPlayer2{ins: ins, mpv: mpv}
 
 	err = conn.Export(mp2, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2")
 	if err != nil {

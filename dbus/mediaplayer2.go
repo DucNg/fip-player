@@ -9,7 +9,7 @@ import (
 )
 
 type MediaPlayer2 struct {
-	*Instance
+	ins *Instance
 
 	mpv *player.MPV
 }
@@ -38,10 +38,41 @@ func (m *MediaPlayer2) playerProps() map[string]*prop.Prop {
 		"CanGoNext":      newProp(false, nil),
 		"CanGoPrevious":  newProp(false, nil),
 		"CanPlay":        newProp(true, nil),
-		"CanPause":       newProp(false, nil),
+		"CanPause":       newProp(true, nil),
 		"CanSeek":        newProp(false, nil),
 		"CanControl":     newProp(false, nil),
 	}
+}
+
+func (m *MediaPlayer2) Pause() *dbus.Error {
+	err := m.ins.props.Set("org.mpris.MediaPlayer2.Player", "PlaybackStatus", dbus.MakeVariant("Paused"))
+	if err != nil {
+		return err
+	}
+	m.mpv.Pause()
+	return nil
+}
+
+func (m *MediaPlayer2) Play() *dbus.Error {
+	err := m.ins.props.Set("org.mpris.MediaPlayer2.Player", "PlaybackStatus", dbus.MakeVariant("Playing"))
+	if err != nil {
+		return err
+	}
+	m.mpv.Resume()
+	return nil
+}
+
+func (m *MediaPlayer2) PlayPause() *dbus.Error {
+	status, err := m.ins.props.Get("org.mpris.MediaPlayer2.Player", "PlaybackStatus")
+	if err != nil {
+		return err
+	}
+	if status.String() == "\"Playing\"" {
+		m.Pause()
+	} else {
+		m.Play()
+	}
+	return nil
 }
 
 // Creates a new property.

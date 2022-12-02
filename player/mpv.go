@@ -220,11 +220,11 @@ func (mpv *MPV) play(stream string, position time.Duration, volume int) {
 	mpv.SendCommand([]string{"loadfile", "http://localhost:8008/proxy/" + stream[len("https://"):], "replace", options})
 }
 
-func (mpv *MPV) pause() {
+func (mpv *MPV) Pause() {
 	mpv.setProperty("pause", "yes")
 }
 
-func (mpv *MPV) resume() {
+func (mpv *MPV) Resume() {
 	mpv.setProperty("pause", "no")
 }
 

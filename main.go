@@ -21,6 +21,8 @@ func main() {
 		switch event {
 		case player.STATE_PLAYING:
 			fmt.Println("Playing...")
+		case player.STATE_PAUSED:
+			fmt.Println("Pausing...")
 		}
 	}
 }

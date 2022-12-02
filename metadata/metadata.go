@@ -41,7 +41,7 @@ func FetchMetadata() FipMetadata {
 		log.Fatalln(err.Error())
 	}
 
-	log.Printf("Received %#v from FIP API\n", metadata)
+	log.Printf("Delay to refresh %d\n", metadata.DelayToRefresh)
 
 	return metadata
 }
