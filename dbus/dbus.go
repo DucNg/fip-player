@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/DucNg/fip-player/metadata"
 	"github.com/DucNg/fip-player/player"
@@ -18,19 +17,20 @@ type MetadataMap map[string]interface{}
 
 type Instance struct {
 	props *prop.Properties
+	conn  *dbus.Conn
 
 	name string
 }
 
-func RunDbusListener(mpv *player.MPV) {
+func CreateDbusInstance(mpv *player.MPV) *Instance {
 	conn, err := dbus.ConnectSessionBus()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	defer conn.Close()
 
 	ins := &Instance{
 		name: fmt.Sprintf("org.mpris.MediaPlayer2.fipPlayer.instance%d", os.Getpid()),
+		conn: conn,
 	}
 	mp2 := &MediaPlayer2{ins: ins, mpv: mpv}
 
@@ -66,16 +66,10 @@ func RunDbusListener(mpv *player.MPV) {
 	}
 	fmt.Println("D-Bus listening")
 
-	go func() {
-		UpdateMetadata(ins)
-	}()
-
-	select {}
+	return ins
 }
 
-func GetMetadata() (MetadataMap, time.Duration) {
-	fm := metadata.FetchMetadata()
-
+func GetMetadataMap(fm *metadata.FipMetadata) MetadataMap {
 	id := strings.ReplaceAll(fm.Now.Song.Id, "-", "")
 
 	var trackId string
@@ -94,17 +88,18 @@ func GetMetadata() (MetadataMap, time.Duration) {
 		"xesam:albumArtist": fm.Now.SecondLine.Title,
 	}
 
-	return *m, fm.Delay()
+	return *m
 }
 
-func UpdateMetadata(ins *Instance) {
-	metadata, delayToRefresh := GetMetadata()
+func UpdateMetadata(ins *Instance, fm *metadata.FipMetadata) {
+	metadata := GetMetadataMap(fm)
 
 	dbusErr := ins.props.Set("org.mpris.MediaPlayer2.Player", "Metadata", dbus.MakeVariant(metadata))
 	if dbusErr != nil {
 		log.Println(dbusErr, metadata)
 	}
+}
 
-	time.Sleep(delayToRefresh)
-	UpdateMetadata(ins)
+func (ins *Instance) CloseConnection() {
+	ins.conn.Close()
 }

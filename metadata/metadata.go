@@ -26,11 +26,13 @@ type FipMetadata struct {
 	}
 }
 
-func FetchMetadata() FipMetadata {
-	res, err := http.Get("https://www.radiofrance.fr/api/v2.0/stations/fip/live")
+func FetchMetadata(url string) *FipMetadata {
+	res, err := http.Get(url)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
+	defer res.Body.Close()
+
 	jsonRes, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -41,9 +43,13 @@ func FetchMetadata() FipMetadata {
 		log.Fatalln(err.Error())
 	}
 
+	// Trying to debug FIP API sending strange data
 	log.Printf("Delay to refresh %d\n", metadata.DelayToRefresh)
+	if metadata.DelayToRefresh >= 3600000 {
+		log.Println(string(jsonRes))
+	}
 
-	return metadata
+	return &metadata
 }
 
 func (fm *FipMetadata) Duration() time.Duration {

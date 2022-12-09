@@ -18,9 +18,10 @@ func main() {
 	mpv.Initialize()
 	mpv.SendCommand([]string{"loadfile", "https://stream.radiofrance.fr/fip/fip.m3u8?id=radiofrance"})
 
-	go dbus.RunDbusListener(mpv)
+	ins := dbus.CreateDbusInstance(mpv)
+	defer ins.CloseConnection()
 
-	gui.Render()
+	gui.Render(ins, mpv)
 
 	// for event := range mpvChan {
 	// 	switch event {
