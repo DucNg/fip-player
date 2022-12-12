@@ -64,7 +64,6 @@ func CreateDbusInstance(mpv *player.MPV) *Instance {
 	if reply != dbus.RequestNameReplyPrimaryOwner {
 		log.Fatalln("Name already taken")
 	}
-	fmt.Println("D-Bus listening")
 
 	return ins
 }
@@ -83,9 +82,9 @@ func GetMetadataMap(fm *metadata.FipMetadata) MetadataMap {
 		"mpris:trackid": dbus.ObjectPath(trackId),
 		"mpris:length":  fm.Duration(),
 
-		"xesam:title":       fm.Now.FirstLine.Title,
-		"xesam:artist":      fm.Now.SecondLine.Title,
-		"xesam:albumArtist": fm.Now.SecondLine.Title,
+		"xesam:title":       fm.Now.FirstLine,
+		"xesam:artist":      fm.Now.SecondLine,
+		"xesam:albumArtist": fm.Now.SecondLine,
 	}
 
 	return *m

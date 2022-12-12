@@ -11,16 +11,14 @@ import (
 type FipMetadata struct {
 	DelayToRefresh uint
 	Now            struct {
-		FirstLine struct {
-			Title string
-		}
-		SecondLine struct {
-			Title string
-		}
-		Song struct {
+		FirstLine  string
+		SecondLine string
+		Song       struct {
 			Id   string
 			Year uint
 		}
+	}
+	Media struct {
 		StartTime uint
 		EndTime   uint
 	}
@@ -53,7 +51,7 @@ func FetchMetadata(url string) *FipMetadata {
 }
 
 func (fm *FipMetadata) Duration() time.Duration {
-	return time.Duration(fm.Now.EndTime-fm.Now.StartTime) * time.Microsecond
+	return time.Duration(fm.Media.EndTime-fm.Media.StartTime) * time.Microsecond
 }
 
 func (fm *FipMetadata) Delay() time.Duration {
