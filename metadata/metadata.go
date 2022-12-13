@@ -43,7 +43,7 @@ func FetchMetadata(url string) *FipMetadata {
 
 	// Trying to debug FIP API sending strange data
 	log.Printf("Delay to refresh %d\n", metadata.DelayToRefresh)
-	if metadata.DelayToRefresh >= 3600000 {
+	if metadata.DelayToRefresh >= 1000000 {
 		log.Println(string(jsonRes))
 	}
 
