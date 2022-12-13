@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -17,17 +18,19 @@ var docStyle = lipgloss.NewStyle().Margin(1, 2)
 var radios = []list.Item{
 	item{
 		title:       "FIP",
-		desc:        "I have ’em all over my house",
+		desc:        "La radio la plus éclectique du monde",
 		streamUrl:   "https://stream.radiofrance.fr/fip/fip.m3u8?id=radiofrance",
 		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/fip/webradios/fip",
 	},
 	item{
 		title:       "FIP Jazz",
-		desc:        "It's good on toast",
+		desc:        "Un mix de titres inédits et de grands classiques : d’Avishai Cohen à Herbie Hancock, de Nina Simone à Christian Scott.",
 		streamUrl:   "https://stream.radiofrance.fr/fipjazz/fipjazz_hifi.m3u8?id=radiofrance",
 		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/fip/webradios/fip_jazz",
 	},
 }
+
+var program *tea.Program
 
 type item struct {
 	title, desc, streamUrl, metadataUrl string
@@ -42,16 +45,17 @@ type model struct {
 	mpv              *player.MPV
 	ins              *dbus.Instance
 	metadataLoopChan chan struct{}
+	playingItemIndex int
 }
 
-func UpdateMetadataLoop(m *model, delayToRefresh time.Duration, url string) {
+func UpdateMetadataLoop(m *model, delayToRefresh time.Duration) {
 	m.metadataLoopChan = make(chan struct{})
 
 	for {
 		t := time.NewTimer(delayToRefresh)
 		select {
 		case <-t.C:
-			delayToRefresh = setMetadata(m, url)
+			delayToRefresh = setMetadata(m)
 		case <-m.metadataLoopChan:
 			return
 		}
@@ -59,11 +63,11 @@ func UpdateMetadataLoop(m *model, delayToRefresh time.Duration, url string) {
 }
 
 func (m *model) Init() tea.Cmd {
-	initialMetadataUrl := m.list.SelectedItem().(item).metadataUrl
+	m.playingItemIndex = m.list.Index()
 
-	delayToRefresh := setMetadata(m, initialMetadataUrl)
+	delayToRefresh := setMetadata(m)
 
-	go UpdateMetadataLoop(m, delayToRefresh, initialMetadataUrl)
+	go UpdateMetadataLoop(m, delayToRefresh)
 
 	return nil
 }
@@ -75,20 +79,30 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		if msg.String() == "enter" {
-			// Change the mpv stream
+			// Reset desc
+			previousItem := m.list.Items()[m.playingItemIndex].(item)
+			previousItem.desc = "Not playing..."
+			m.list.SetItem(m.playingItemIndex, previousItem)
+
+			// Get new selection
 			item := m.list.SelectedItem().(item)
+			m.playingItemIndex = m.list.Index()
+
+			// Change the mpv stream
 			m.mpv.SendCommand([]string{"loadfile", item.streamUrl})
 
 			// Change the metadata loop url
-			m.metadataLoopChan <- struct{}{}              // Stop the existing loop
-			go UpdateMetadataLoop(m, 0, item.metadataUrl) // Start the new one
-
-			// Change the description
-			// TODO
+			m.metadataLoopChan <- struct{}{} // Stop the existing loop
+			go UpdateMetadataLoop(m, 0)      // Start the new one
 		}
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
 		m.list.SetSize(msg.Width-h, msg.Height-v)
+	case descriptionUpdate:
+		item := m.list.SelectedItem().(item)
+		item.desc = string(msg)
+		cmd := m.list.SetItem(m.playingItemIndex, item)
+		return m, cmd
 	}
 
 	var cmd tea.Cmd
@@ -110,15 +124,26 @@ func Render(ins *dbus.Instance, mpv *player.MPV) {
 
 	p := tea.NewProgram(&m, tea.WithAltScreen())
 
+	program = p
+
 	if _, err := p.Run(); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func setMetadata(m *model, url string) time.Duration {
-	fm := metadata.FetchMetadata(url)
+func setMetadata(m *model) time.Duration {
+	playingItem := m.list.Items()[m.playingItemIndex].(item)
+	fm := metadata.FetchMetadata(playingItem.metadataUrl)
 
 	dbus.UpdateMetadata(m.ins, fm)
 
+	go program.Send(updateDesc(fm))
+
 	return fm.Delay()
+}
+
+type descriptionUpdate string
+
+func updateDesc(fm *metadata.FipMetadata) descriptionUpdate {
+	return descriptionUpdate(fmt.Sprintf("%v - %v", fm.Now.FirstLine, fm.Now.SecondLine))
 }
