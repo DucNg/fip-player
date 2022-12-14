@@ -15,21 +15,6 @@ import (
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
-var radios = []list.Item{
-	item{
-		title:       "FIP",
-		desc:        "La radio la plus éclectique du monde",
-		streamUrl:   "https://stream.radiofrance.fr/fip/fip.m3u8?id=radiofrance",
-		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/fip/webradios/fip",
-	},
-	item{
-		title:       "FIP Jazz",
-		desc:        "Un mix de titres inédits et de grands classiques : d’Avishai Cohen à Herbie Hancock, de Nina Simone à Christian Scott.",
-		streamUrl:   "https://stream.radiofrance.fr/fipjazz/fipjazz_hifi.m3u8?id=radiofrance",
-		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/fip/webradios/fip_jazz",
-	},
-}
-
 var program *tea.Program
 
 type item struct {
@@ -79,9 +64,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		if msg.String() == "enter" {
+			if m.playingItemIndex == m.list.Index() {
+				break
+			}
+
 			// Reset desc
 			previousItem := m.list.Items()[m.playingItemIndex].(item)
-			previousItem.desc = "Not playing..."
+			previousItem.desc = radios[m.playingItemIndex].(item).desc
 			m.list.SetItem(m.playingItemIndex, previousItem)
 
 			// Get new selection
@@ -115,8 +104,11 @@ func (m model) View() string {
 }
 
 func Render(ins *dbus.Instance, mpv *player.MPV) {
+	guiList := make([]list.Item, len(radios))
+	copy(guiList, radios)
+
 	m := model{
-		list: list.New(radios, list.NewDefaultDelegate(), 0, 0),
+		list: list.New(guiList, list.NewDefaultDelegate(), 0, 0),
 		mpv:  mpv,
 		ins:  ins,
 	}
