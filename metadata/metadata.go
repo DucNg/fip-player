@@ -17,6 +17,9 @@ type FipMetadata struct {
 			Id   string
 			Year uint
 		}
+		Cover struct {
+			Src string
+		}
 	}
 	Media struct {
 		StartTime uint
