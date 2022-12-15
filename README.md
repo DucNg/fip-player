@@ -2,6 +2,10 @@
 
 A simple fip radio player with mpris metadata
 
+<p align="center">
+  <img src="docs/screenshot.png" />
+</p>
+
 # Credits
 
 * A cool dbus lib: https://github.com/godbus/dbus
