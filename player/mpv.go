@@ -320,8 +320,7 @@ func (mpv *MPV) eventHandler(eventChan chan State) {
 			eventChan <- STATE_STOPPED
         case C.MPV_EVENT_PROPERTY_CHANGE:
             prop := (*C.mpv_event_property)(event.data)
-            switch uint64(event.reply_userdata) {
-            case PROP_PAUSE:
+            if uint64(event.reply_userdata) == PROP_PAUSE {
                 if *(*int32)(prop.data) != 0 {
                     eventChan <- STATE_PAUSED
                 } else {
