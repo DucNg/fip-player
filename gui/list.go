@@ -3,6 +3,9 @@ package gui
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/DucNg/fip-player/dbus"
@@ -50,8 +53,9 @@ func UpdateMetadataLoop(m *model, delayToRefresh time.Duration) {
 func (m *model) Init() tea.Cmd {
 	m.playingItemIndex = m.list.Index()
 
-	delayToRefresh := setMetadata(m)
+	m.mpv.SendCommand([]string{"loadfile", m.list.Items()[m.playingItemIndex].(item).streamUrl})
 
+	delayToRefresh := setMetadata(m)
 	go UpdateMetadataLoop(m, delayToRefresh)
 
 	return nil
@@ -103,7 +107,8 @@ func (m model) View() string {
 	return docStyle.Render(m.list.View())
 }
 
-func Render(ins *dbus.Instance, mpv *player.MPV) {
+// Render creates the GUI and returns last selected radio index on close
+func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
 	guiList := make([]list.Item, len(radios))
 	copy(guiList, radios)
 
@@ -113,14 +118,25 @@ func Render(ins *dbus.Instance, mpv *player.MPV) {
 		ins:  ins,
 	}
 	m.list.Title = "FIP Radios"
+	m.list.Select(lastRadioIndex)
 
 	p := tea.NewProgram(&m, tea.WithAltScreen())
 
 	program = p
 
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+
+	go func() {
+		<-c
+		p.Quit()
+	}()
+
 	if _, err := p.Run(); err != nil {
 		log.Fatalln(err)
 	}
+
+	return m.list.Index()
 }
 
 func setMetadata(m *model) time.Duration {
@@ -137,5 +153,5 @@ func setMetadata(m *model) time.Duration {
 type descriptionUpdate string
 
 func updateDesc(fm *metadata.FipMetadata) descriptionUpdate {
-	return descriptionUpdate(fmt.Sprintf("%v - %v", fm.Now.FirstLine, fm.Now.SecondLine))
+	return descriptionUpdate(fmt.Sprintf("▶ %v - %v", fm.Now.FirstLine, fm.Now.SecondLine))
 }
