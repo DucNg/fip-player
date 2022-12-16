@@ -60,7 +60,7 @@ func cachePath() string {
 	if err != nil {
 		panic(err)
 	}
-	cache := path.Join(cacheDir, "fip-radio")
+	cache := path.Join(cacheDir, "fip-player")
 	err = os.MkdirAll(cache, 0755)
 	if err != nil {
 		panic(err)
