@@ -75,4 +75,46 @@ var radios = []list.Item{
 		streamUrl:   "https://stream.radiofrance.fr/fipnouveautes/fipnouveautes_hifi.m3u8?id=radiofrance",
 		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/fip/webradios/fip_nouveautes",
 	},
+	item{
+		title:       "Classique Easy",
+		desc:        "la meilleure radio classique : les plus belles œuvres, sans pub, en haute définition.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusiqueeasyclassique/francemusiqueeasyclassique_hifi.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_classique_easy",
+	},
+	item{
+		title:       "Opéra",
+		desc:        "Une sélection inédite des plus grands Opéras, des plus beaux airs, des plus belles voix.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusiqueopera/francemusiqueopera_hifi.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_opera",
+	},
+	item{
+		title:       "La Baroque",
+		desc:        "Un voyage entre le XVIIe et le milieu du XVIIIe siècle. Sélection musicale inédite, en haute définition.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusiquebaroque/francemusiquebaroque.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_baroque",
+	},
+	item{
+		title:       "Classique Plus",
+		desc:        "Des œuvres rares, intégrales et peu connues, en haute définition et sans pub.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusiqueclassiqueplus/francemusiqueclassiqueplus.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_classique_plus",
+	},
+	item{
+		title:       "Concerts Radio France",
+		desc:        "Des interprétations exceptionnelles de musique classique et symphonique. Découvrez la radio Concerts de France Musique.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusiqueconcertsradiofrance/francemusiqueconcertsradiofrance.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_concert_rf",
+	},
+	item{
+		title:       "La Jazz",
+		desc:        "Une sélection variée de titres jazz.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusiquelajazz/francemusiquelajazz_hifi.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_la_jazz",
+	},
+	item{
+		title:       "Ocora Musiques du monde",
+		desc:        "Des pépites musicales traditionnelles du monde entier.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusiqueocoramonde/francemusiqueocoramonde.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_ocora_monde",
+	},
 }
