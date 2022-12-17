@@ -136,7 +136,7 @@ func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
 		log.Fatalln(err)
 	}
 
-	return m.list.Index()
+	return m.playingItemIndex
 }
 
 func setMetadata(m *model) time.Duration {
