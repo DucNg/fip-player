@@ -77,7 +77,7 @@ var radios = []list.Item{
 	},
 	item{
 		title:       "Classique Easy",
-		desc:        "la meilleure radio classique : les plus belles œuvres, sans pub, en haute définition.",
+		desc:        "La meilleure radio classique : les plus belles œuvres.",
 		streamUrl:   "https://stream.radiofrance.fr/francemusiqueeasyclassique/francemusiqueeasyclassique_hifi.m3u8?id=radiofrance",
 		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_classique_easy",
 	},
@@ -89,19 +89,19 @@ var radios = []list.Item{
 	},
 	item{
 		title:       "La Baroque",
-		desc:        "Un voyage entre le XVIIe et le milieu du XVIIIe siècle. Sélection musicale inédite, en haute définition.",
+		desc:        "Un voyage entre le XVIIe et le milieu du XVIIIe siècle.",
 		streamUrl:   "https://stream.radiofrance.fr/francemusiquebaroque/francemusiquebaroque.m3u8?id=radiofrance",
 		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_baroque",
 	},
 	item{
 		title:       "Classique Plus",
-		desc:        "Des œuvres rares, intégrales et peu connues, en haute définition et sans pub.",
+		desc:        "Des œuvres rares, intégrales et peu connues.",
 		streamUrl:   "https://stream.radiofrance.fr/francemusiqueclassiqueplus/francemusiqueclassiqueplus.m3u8?id=radiofrance",
 		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_classique_plus",
 	},
 	item{
 		title:       "Concerts Radio France",
-		desc:        "Des interprétations exceptionnelles de musique classique et symphonique. Découvrez la radio Concerts de France Musique.",
+		desc:        "Des interprétations exceptionnelles de musique classique et symphonique.",
 		streamUrl:   "https://stream.radiofrance.fr/francemusiqueconcertsradiofrance/francemusiqueconcertsradiofrance.m3u8?id=radiofrance",
 		metadataUrl: "https://www.radiofrance.fr/api/v2.0/stations/francemusique/webradios/francemusique_concert_rf",
 	},
