@@ -35,6 +35,8 @@ type MPV struct {
 
 var logLibMPV = flag.Bool("log-libmpv", false, "log output of libmpv")
 
+const propPause C.uint64_t = 0
+
 // New creates a new MPV instance and initializes the libmpv player
 func (mpv *MPV) Initialize() (chan State, int) {
 	if mpv.handle != nil || mpv.running {
@@ -71,6 +73,10 @@ func (mpv *MPV) Initialize() (chan State, int) {
 	mpv.setOptionFlag("quiet", true)
 
 	mpv.checkError(C.mpv_initialize(mpv.handle))
+
+	propName := C.CString("pause")
+	C.mpv_observe_property(mpv.handle, propPause, propName, C.MPV_FORMAT_FLAG)
+	C.free(unsafe.Pointer(propName))
 
 	eventChan := make(chan State)
 
@@ -314,10 +320,15 @@ func (mpv *MPV) eventHandler(eventChan chan State) {
 			eventChan <- STATE_PLAYING
 		case C.MPV_EVENT_END_FILE:
 			eventChan <- STATE_STOPPED
-		case C.MPV_EVENT_PAUSE:
-			eventChan <- STATE_PAUSED
-		case C.MPV_EVENT_UNPAUSE:
-			eventChan <- STATE_PLAYING
+		case C.MPV_EVENT_PROPERTY_CHANGE:
+			prop := (*C.mpv_event_property)(event.data)
+			if event.reply_userdata == propPause {
+				if *(*C.int)(prop.data) != 0 {
+					eventChan <- STATE_PAUSED
+				} else {
+					eventChan <- STATE_PLAYING
+				}
+			}
 		}
 	}
 }
