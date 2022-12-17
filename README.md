@@ -16,33 +16,41 @@ Dark theme
 
 ## Dependencies
 
-* Go >= 1.19
-* You need to have **libmpv** installed on your system.
+You need to have **libmpv** installed on your system.
 
 **Arch**
 ```shell
-pacman -S mpv go
+pacman -S mpv
 ```
 
 **Ubuntu**
 ```shell
-apt install libmpv-dev golang
+apt install libmpv-dev
+```
+
+## Use pre builds
+
+[**Download latest release**](https://github.com/DucNg/fip-player/releases/download/latest/fip-player)
+
+```shell
+chmod +x fip-player
+./fip-player
+```
+
+Install
+```
+sudo cp fip-player /usr/local/bin
 ```
 
 ## Build and run
+
+**Requires Go >= 1.19 and libmpv**
 
 `go run .`
 
 Run in debug mode (creates a log file in /tmp)
 
 `go run . -d`
-
-## Install
-
-```shell
-go build
-sudo cp fip-player /usr/local/bin
-```
 
 # Credits
 
