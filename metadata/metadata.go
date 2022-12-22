@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -14,8 +15,13 @@ type FipMetadata struct {
 		FirstLine  string
 		SecondLine string
 		Song       struct {
-			Id   string
-			Year uint
+			Id      string
+			Year    uint
+			Release struct {
+				Title     string
+				Label     string
+				Reference string
+			}
 		}
 		Cover struct {
 			Src string
@@ -54,9 +60,18 @@ func FetchMetadata(url string) *FipMetadata {
 }
 
 func (fm *FipMetadata) Duration() time.Duration {
-	return time.Duration(fm.Media.EndTime-fm.Media.StartTime) * time.Microsecond
+	return time.Duration(fm.Media.EndTime-fm.Media.StartTime) * time.Millisecond
 }
 
 func (fm *FipMetadata) Delay() time.Duration {
 	return time.Duration(fm.DelayToRefresh) * time.Millisecond
+}
+
+func (fm *FipMetadata) ContentCreated() string {
+	parsedYear, err := time.Parse("2006", fmt.Sprintf("%v", fm.Now.Song.Year))
+	if err != nil {
+		log.Println(err)
+	}
+
+	return parsedYear.Format(time.RFC3339)
 }

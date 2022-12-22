@@ -83,9 +83,11 @@ func GetMetadataMap(fm *metadata.FipMetadata) MetadataMap {
 		"mpris:length":  fm.Duration(),
 		"mpris:artUrl":  fm.Now.Cover.Src,
 
-		"xesam:title":       fm.Now.FirstLine,
-		"xesam:artist":      []string{fm.Now.SecondLine},
-		"xesam:albumArtist": []string{fm.Now.SecondLine},
+		"xesam:album":          fm.Now.Song.Release.Title,
+		"xesam:albumArtist":    []string{fm.Now.SecondLine},
+		"xesam:artist":         []string{fm.Now.SecondLine},
+		"xesam:contentCreated": fm.ContentCreated(),
+		"xesam:title":          fm.Now.FirstLine,
 	}
 
 	return *m
