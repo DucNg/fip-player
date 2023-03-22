@@ -92,7 +92,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		h, v := docStyle.GetFrameSize()
 		m.list.SetSize(msg.Width-h, msg.Height-v)
 	case descriptionUpdate:
-		item := m.list.SelectedItem().(item)
+		item := m.list.Items()[m.playingItemIndex].(item)
 		item.desc = string(msg)
 		cmd := m.list.SetItem(m.playingItemIndex, item)
 		return m, cmd
