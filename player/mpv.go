@@ -52,6 +52,7 @@ func (mpv *MPV) Initialize() (chan State, int) {
 	//mpv.setOptionString("softvol", "yes")
 	//mpv.setOptionString("ao", "pulse")
 	mpv.setOptionInt("volume", 100)
+	mpv.setOptionInt("volume-max", 100)
 
 	// Disable video in three ways.
 	mpv.setOptionFlag("video", false)
@@ -204,6 +205,15 @@ func (mpv *MPV) setProperty(name, value string) {
 	mpv.checkError(C.mpv_set_property_async(mpv.handle, 1, cName, C.MPV_FORMAT_STRING, unsafe.Pointer(&cValue)))
 }
 
+func (mpv *MPV) SetVolume(volume float64) {
+	log.Printf("MPV set volume: %d\n", volume)
+
+	cName := C.CString("volume")
+	defer C.free(unsafe.Pointer(cName))
+
+	mpv.checkError(C.mpv_set_property_async(mpv.handle, 1, cName, C.MPV_FORMAT_DOUBLE, unsafe.Pointer(&volume)))
+}
+
 func (mpv *MPV) play(stream string, position time.Duration, volume int) {
 	options := "pause=no"
 
@@ -266,21 +276,6 @@ func (mpv *MPV) GetPosition() (time.Duration, error) {
 func (mpv *MPV) setPosition(position time.Duration) {
 	mpv.SendCommand([]string{"seek", fmt.Sprintf("%.3f", position.Seconds()), "absolute"})
 }
-
-// func (mpv *MPV) getVolume() int {
-// 	volume, err := mpv.getProperty("volume")
-// 	if err != nil {
-// 		// should not happen
-// 		panic(err)
-// 	}
-
-// 	return int(volume + 0.5)
-// }
-
-// func (mpv *MPV) setVolume(volume int) {
-// 	mpv.setProperty("volume", strconv.Itoa(volume))
-// 	config.Get().SetInt("player.mpv.volume", volume)
-// }
 
 func (mpv *MPV) stop() {
 	mpv.SendCommand([]string{"stop"})
