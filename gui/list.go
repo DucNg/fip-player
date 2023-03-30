@@ -11,6 +11,7 @@ import (
 	"github.com/DucNg/fip-player/dbus"
 	"github.com/DucNg/fip-player/metadata"
 	"github.com/DucNg/fip-player/player"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -34,6 +35,7 @@ type model struct {
 	ins              *dbus.Instance
 	metadataLoopChan chan struct{}
 	playingItemIndex int
+	volume           float64
 }
 
 func UpdateMetadataLoop(m *model, delayToRefresh time.Duration) {
@@ -52,6 +54,7 @@ func UpdateMetadataLoop(m *model, delayToRefresh time.Duration) {
 
 func (m *model) Init() tea.Cmd {
 	m.playingItemIndex = m.list.Index()
+	m.volume = 100
 
 	m.mpv.SendCommand([]string{"loadfile", m.list.Items()[m.playingItemIndex].(item).streamUrl})
 
@@ -64,10 +67,10 @@ func (m *model) Init() tea.Cmd {
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if msg.String() == "ctrl+c" {
+		switch msg.String() {
+		case "ctrl+c":
 			return m, tea.Quit
-		}
-		if msg.String() == "enter" {
+		case "enter":
 			if m.playingItemIndex == m.list.Index() {
 				break
 			}
@@ -87,6 +90,14 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Change the metadata loop url
 			m.metadataLoopChan <- struct{}{} // Stop the existing loop
 			go UpdateMetadataLoop(m, 0)      // Start the new one
+		case "+", "-":
+			if msg.String() == "+" && m.volume < 100 {
+				m.volume += 5
+			} else if msg.String() == "-" && m.volume > 0 {
+				m.volume -= 5
+			}
+			m.mpv.SetVolume(m.volume)
+			m.list.NewStatusMessage(fmt.Sprintf("volume set to %.0f%%", m.volume))
 		}
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
@@ -119,6 +130,12 @@ func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
 	}
 	m.list.Title = "FIP Radios"
 	m.list.Select(lastRadioIndex)
+	m.list.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "volume up")),
+			key.NewBinding(key.WithKeys("-"), key.WithHelp("-", "volume down")),
+		}
+	}
 
 	p := tea.NewProgram(&m, tea.WithAltScreen())
 
