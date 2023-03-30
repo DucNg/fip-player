@@ -206,7 +206,7 @@ func (mpv *MPV) setProperty(name, value string) {
 }
 
 func (mpv *MPV) SetVolume(volume float64) {
-	log.Printf("MPV set volume: %d\n", volume)
+	log.Printf("MPV set volume: %f\n", volume)
 
 	cName := C.CString("volume")
 	defer C.free(unsafe.Pointer(cName))
