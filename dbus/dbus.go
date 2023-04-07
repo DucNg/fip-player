@@ -1,9 +1,7 @@
 package dbus
 
 import (
-	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/DucNg/fip-player/metadata"
@@ -18,26 +16,18 @@ type MetadataMap map[string]interface{}
 type Instance struct {
 	props *prop.Properties
 	conn  *dbus.Conn
-
-	name string
 }
 
 func CreateDbusInstance(mpv *player.MPV) *Instance {
 	conn, err := dbus.ConnectSessionBus()
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatalln(err)
 	}
 
 	ins := &Instance{
-		name: fmt.Sprintf("org.mpris.MediaPlayer2.fipPlayer.instance%d", os.Getpid()),
 		conn: conn,
 	}
-	mp2 := &MediaPlayer2{ins: ins, mpv: mpv}
-
-	err = conn.Export(mp2, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	mp2 := &MediaPlayer2{mpv: mpv}
 
 	err = conn.Export(mp2, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player")
 	if err != nil {
@@ -96,7 +86,11 @@ func GetMetadataMap(fm *metadata.FipMetadata) MetadataMap {
 func UpdateMetadata(ins *Instance, fm *metadata.FipMetadata) {
 	metadata := GetMetadataMap(fm)
 
-	dbusErr := ins.props.Set("org.mpris.MediaPlayer2.Player", "Metadata", dbus.MakeVariant(metadata))
+	dbusErr := ins.props.Set(
+		"org.mpris.MediaPlayer2.Player",
+		"Metadata",
+		dbus.MakeVariant(metadata),
+	)
 	if dbusErr != nil {
 		log.Println(dbusErr, metadata)
 	}
