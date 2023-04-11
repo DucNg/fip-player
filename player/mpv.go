@@ -13,17 +13,12 @@ package player
 // }
 import "C"
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"log"
-	"strings"
 	"sync"
-	"time"
 	"unsafe"
 )
-
-var MPV_PROPERTY_UNAVAILABLE = errors.New("mpv: property unavailable")
 
 // MPV is an implementation of Backend, using libmpv.
 type MPV struct {
@@ -33,12 +28,22 @@ type MPV struct {
 	mainloopExit chan struct{}
 }
 
+type State int
+
+const (
+	STATE_STOPPED   = 0
+	STATE_PLAYING   = 1
+	STATE_PAUSED    = 2
+	STATE_BUFFERING = 3
+	STATE_SEEKING   = 4 // not in the YouTube API
+)
+
 var logLibMPV = flag.Bool("log-libmpv", false, "log output of libmpv")
 
 const propPause C.uint64_t = 0
 
 // New creates a new MPV instance and initializes the libmpv player
-func (mpv *MPV) Initialize() (chan State, int) {
+func (mpv *MPV) Initialize() {
 	if mpv.handle != nil || mpv.running {
 		panic("already initialized")
 	}
@@ -82,34 +87,6 @@ func (mpv *MPV) Initialize() (chan State, int) {
 	eventChan := make(chan State)
 
 	go mpv.eventHandler(eventChan)
-
-	return eventChan, 100
-}
-
-// Function quit quits the player.
-// WARNING: This MUST be the last call on this media player.
-func (mpv *MPV) quit() {
-	mpv.runningMutex.Lock()
-	if !mpv.running {
-		panic("quit called twice")
-	}
-	mpv.running = false
-	mpv.runningMutex.Unlock()
-
-	// Wake up the event handler mainloop, probably sending the MPV_EVENT_NONE
-	// signal.
-	// See mpv_wait_event below: this doesn't work yet (it uses a workaround
-	// now).
-	//C.mpv_wakeup(handle)
-
-	// Wait until the mainloop has exited.
-	<-mpv.mainloopExit
-
-	// Actually destroy the MPV player. This blocks until the player has been
-	// fully brought down.
-	handle := mpv.handle
-	mpv.handle = nil // make it easier to catch race conditions
-	C.mpv_terminate_destroy(handle)
 }
 
 // setOptionFlag passes a boolean flag to mpv
@@ -144,6 +121,22 @@ func (mpv *MPV) setOption(key string, format C.mpv_format, value unsafe.Pointer)
 	mpv.checkError(C.mpv_set_option(mpv.handle, cKey, format, value))
 }
 
+// setProperty sets the MPV player property
+func (mpv *MPV) setProperty(name, value string) {
+	log.Printf("MPV set property: %s=%s\n", name, value)
+
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+
+	// setProperty can take an unbounded time, don't block here using _async
+	// TODO: use some form of error handling. Sometimes, it is impossible to
+	// know beforehand whether setting a property will cause an error.
+	// Importantly, catch the 'property unavailable' error.
+	mpv.checkError(C.mpv_set_property_async(mpv.handle, 1, cName, C.MPV_FORMAT_STRING, unsafe.Pointer(&cValue)))
+}
+
 // sendCommand sends a command to the libmpv player
 func (mpv *MPV) SendCommand(command []string) {
 	// Print command, but without the stream
@@ -169,42 +162,6 @@ func (mpv *MPV) SendCommand(command []string) {
 	mpv.checkError(C.mpv_command_async(mpv.handle, 0, cArray))
 }
 
-// getProperty returns the MPV player property as a string
-// Warning: this function can take an unbounded time. Call inside a new
-// goroutine to prevent blocking / deadlocks.
-func (mpv *MPV) getProperty(name string) (float64, error) {
-	log.Printf("MPV get property: %s\n", name)
-
-	cName := C.CString(name)
-	defer C.free(unsafe.Pointer(cName))
-
-	var cValue C.double
-	status := C.mpv_get_property(mpv.handle, cName, C.MPV_FORMAT_DOUBLE, unsafe.Pointer(&cValue))
-	if status == C.MPV_ERROR_PROPERTY_UNAVAILABLE {
-		return 0, MPV_PROPERTY_UNAVAILABLE
-	} else if status != 0 {
-		return 0, errors.New("mpv: " + C.GoString(C.mpv_error_string(status)))
-	}
-
-	return float64(cValue), nil
-}
-
-// setProperty sets the MPV player property
-func (mpv *MPV) setProperty(name, value string) {
-	log.Printf("MPV set property: %s=%s\n", name, value)
-
-	cName := C.CString(name)
-	defer C.free(unsafe.Pointer(cName))
-	cValue := C.CString(value)
-	defer C.free(unsafe.Pointer(cValue))
-
-	// setProperty can take an unbounded time, don't block here using _async
-	// TODO: use some form of error handling. Sometimes, it is impossible to
-	// know beforehand whether setting a property will cause an error.
-	// Importantly, catch the 'property unavailable' error.
-	mpv.checkError(C.mpv_set_property_async(mpv.handle, 1, cName, C.MPV_FORMAT_STRING, unsafe.Pointer(&cValue)))
-}
-
 func (mpv *MPV) SetVolume(volume float64) {
 	log.Printf("MPV set volume: %f\n", volume)
 
@@ -214,71 +171,12 @@ func (mpv *MPV) SetVolume(volume float64) {
 	mpv.checkError(C.mpv_set_property_async(mpv.handle, 1, cName, C.MPV_FORMAT_DOUBLE, unsafe.Pointer(&volume)))
 }
 
-func (mpv *MPV) play(stream string, position time.Duration, volume int) {
-	options := "pause=no"
-
-	if position != 0 {
-		options += fmt.Sprintf(",start=%.3f", position.Seconds())
-	}
-
-	if volume >= 0 {
-		options += fmt.Sprintf(",volume=%d", volume)
-	}
-
-	// The proxy is a workaround for misbehaving libav/libnettle that appear to
-	// try to read the whole HTTP response before closing the connection. Go has
-	// a better HTTPS implementation, which is used here as a workaround.
-	// This libav/libnettle combination is in use on Debian jessie. FFmpeg
-	// doesn't have a problem with it.
-	if !strings.HasPrefix(stream, "https://") {
-		log.Panic("Stream does not start with https://...")
-	}
-	mpv.SendCommand([]string{"loadfile", "http://localhost:8008/proxy/" + stream[len("https://"):], "replace", options})
-}
-
 func (mpv *MPV) Pause() {
 	mpv.setProperty("pause", "yes")
 }
 
 func (mpv *MPV) Resume() {
 	mpv.setProperty("pause", "no")
-}
-
-func (mpv *MPV) getDuration() (time.Duration, error) {
-	duration, err := mpv.getProperty("duration")
-	if err == MPV_PROPERTY_UNAVAILABLE {
-		return 0, PROPERTY_UNAVAILABLE
-	} else if err != nil {
-		// should not happen
-		panic(err)
-	}
-
-	return time.Duration(duration * float64(time.Second)), nil
-}
-
-func (mpv *MPV) GetPosition() (time.Duration, error) {
-	position, err := mpv.getProperty("time-pos")
-	if err == MPV_PROPERTY_UNAVAILABLE {
-		return 0, PROPERTY_UNAVAILABLE
-	} else if err != nil {
-		// should not happen
-		panic(err)
-	}
-
-	if position < 0 {
-		// Sometimes, the position appears to be slightly off.
-		position = 0
-	}
-
-	return time.Duration(position * float64(time.Second)), nil
-}
-
-func (mpv *MPV) setPosition(position time.Duration) {
-	mpv.SendCommand([]string{"seek", fmt.Sprintf("%.3f", position.Seconds()), "absolute"})
-}
-
-func (mpv *MPV) stop() {
-	mpv.SendCommand([]string{"stop"})
 }
 
 // playerEventHandler waits for libmpv player events and sends them on a channel
