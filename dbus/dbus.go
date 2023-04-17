@@ -27,7 +27,7 @@ func CreateDbusInstance(mpv *player.MPV) *Instance {
 	ins := &Instance{
 		conn: conn,
 	}
-	mp2 := &MediaPlayer2{mpv: mpv}
+	mp2 := &MediaPlayer2{ins: ins, mpv: mpv}
 
 	err = conn.Export(mp2, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player")
 	if err != nil {
