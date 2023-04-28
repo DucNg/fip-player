@@ -26,6 +26,7 @@ type MPV struct {
 	running      bool
 	runningMutex sync.Mutex
 	mainloopExit chan struct{}
+	mute         bool
 }
 
 type State int
@@ -50,7 +51,7 @@ func (mpv *MPV) Initialize() {
 
 	mpv.mainloopExit = make(chan struct{})
 	mpv.running = true
-
+	mpv.mute = false
 	mpv.handle = C.mpv_create()
 
 	mpv.setOptionFlag("resume-playback", false)
@@ -174,6 +175,18 @@ func (mpv *MPV) SetVolume(volume float64) {
 func (mpv *MPV) Pause() {
 	mpv.setProperty("pause", "yes")
 }
+
+func (mpv *MPV) ToggleMute() {
+	mpv.mute = !mpv.mute
+	mute := "no"
+	if mpv.mute {
+		mute = "yes"
+	}
+	mpv.setProperty("mute", mute)
+}
+
+// IsMute return true if mpv is muted
+func (mpv *MPV) IsMute() bool { return mpv.mute }
 
 func (mpv *MPV) Resume() {
 	mpv.setProperty("pause", "no")
