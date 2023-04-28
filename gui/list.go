@@ -141,6 +141,7 @@ func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
 		return []key.Binding{
 			key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "volume up")),
 			key.NewBinding(key.WithKeys("-"), key.WithHelp("-", "volume down")),
+			key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "toggle mute")),
 		}
 	}
 
