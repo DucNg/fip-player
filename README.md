@@ -14,7 +14,7 @@ Dark theme
 
 # How to use
 
-## Dependencies
+## Install the dependencies
 
 You need to have **libmpv** installed on your system.
 
@@ -28,7 +28,14 @@ pacman -S mpv
 apt install libmpv-dev
 ```
 
-## Use pre builds
+**Fedora**
+```shell
+dnf install mpv-devel
+```
+
+## Install FIP-Player
+
+### Use pre builds
 
 [**Download latest release**](https://github.com/DucNg/fip-player/releases/download/latest/fip-player)
 
@@ -36,10 +43,16 @@ apt install libmpv-dev
 chmod +x fip-player
 ./fip-player
 ```
-
+ 
 Install
 ```
 sudo cp fip-player /usr/local/bin
+```
+
+### Install using the golang toolchain
+
+```shell
+go install github.com/DucNg/fip-player@latest
 ```
 
 ## Build and run
