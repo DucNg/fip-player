@@ -70,6 +70,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
+		case "m":
+			m.mpv.ToggleMute()
+			mutemsg := "unmuted"
+			if m.mpv.IsMute() {
+				mutemsg = "muted"
+			}
+			return m, m.list.NewStatusMessage(mutemsg)
 		case "enter":
 			if m.playingItemIndex == m.list.Index() {
 				break
@@ -134,6 +141,7 @@ func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
 		return []key.Binding{
 			key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "volume up")),
 			key.NewBinding(key.WithKeys("-"), key.WithHelp("-", "volume down")),
+			key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "toggle mute")),
 		}
 	}
 
