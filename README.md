@@ -12,23 +12,26 @@ Dark theme
   <img src="docs/screenshot-dark.png" />
 </p>
 
-# How to use
+## How to use
 
-## Install the dependencies
+### Install the dependencies
 
 You need to have **libmpv** installed on your system.
 
-**Arch**
+- Arch
+
 ```shell
 pacman -S mpv
 ```
 
-**Ubuntu**
+- Ubuntu
+
 ```shell
 apt install libmpv-dev
 ```
 
-**Fedora**
+- Fedora
+
 ```shell
 dnf install mpv-devel
 ```
@@ -39,14 +42,23 @@ dnf install mpv-devel
 
 [**Download latest release**](https://github.com/DucNg/fip-player/releases/download/latest/fip-player)
 
+Make the binary file executable:
+
 ```shell
 chmod +x fip-player
 ./fip-player
 ```
- 
-Install
-```
+
+Install system-wide:
+  
+```shell
 sudo cp fip-player /usr/local/bin
+```
+
+Install for current user (`~/.local/bin/` must be in your PATH):
+
+```shell
+cp fip-player ~/.local/bin
 ```
 
 ### Install using the golang toolchain
@@ -55,7 +67,7 @@ sudo cp fip-player /usr/local/bin
 go install github.com/DucNg/fip-player@latest
 ```
 
-## Build and run
+### Build and run
 
 **Requires Go >= 1.19 and libmpv**
 
@@ -65,7 +77,7 @@ Run in debug mode (creates a log file in /tmp)
 
 `go run . -d`
 
-# Credits
+## Credits
 
 * A cool dbus lib: https://github.com/godbus/dbus
 * Nice libmpv bindings: https://github.com/aykevl/plaincast
