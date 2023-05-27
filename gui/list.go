@@ -17,7 +17,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var width int
 
 var program *tea.Program
 
@@ -36,6 +36,7 @@ type model struct {
 	metadataLoopChan chan struct{}
 	playingItemIndex int
 	volume           float64
+	trackName        string
 }
 
 func UpdateMetadataLoop(m *model, delayToRefresh time.Duration) {
@@ -72,11 +73,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "m":
 			m.mpv.ToggleMute()
-			mutemsg := "unmuted"
-			if m.mpv.IsMute() {
-				mutemsg = "muted"
-			}
-			return m, m.list.NewStatusMessage(mutemsg)
+			return m, nil
 		case "enter":
 			if m.playingItemIndex == m.list.Index() {
 				break
@@ -104,11 +101,11 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.volume -= 5
 			}
 			m.mpv.SetVolume(m.volume)
-			m.list.NewStatusMessage(fmt.Sprintf("volume set to %.0f%%", m.volume))
 		}
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
-		m.list.SetSize(msg.Width-h, msg.Height-v)
+		width = msg.Width - h
+		m.list.SetSize(msg.Width-h, msg.Height-v-1)
 	case descriptionUpdate:
 		item := m.list.Items()[m.playingItemIndex].(item)
 		item.desc = string(msg)
@@ -122,7 +119,15 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return docStyle.Render(m.list.View())
+	bar := topBar(
+		m.list.Items()[m.playingItemIndex].(item).title,
+		m.trackName,
+		int(m.volume),
+		m.mpv.IsMute(),
+	)
+
+	out := bar + "\n" + m.list.View()
+	return docStyle.Render(out)
 }
 
 // Render creates the GUI and returns last selected radio index on close
@@ -135,8 +140,9 @@ func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
 		mpv:  mpv,
 		ins:  ins,
 	}
-	m.list.Title = "FIP Radios"
+
 	m.list.Select(lastRadioIndex)
+	m.list.SetShowTitle(false)
 	m.list.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{
 			key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "volume up")),
@@ -167,7 +173,7 @@ func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
 func setMetadata(m *model) time.Duration {
 	playingItem := m.list.Items()[m.playingItemIndex].(item)
 	fm := metadata.FetchMetadata(playingItem.metadataUrl)
-
+	m.trackName = fmt.Sprintf("%s - %s", fm.Now.FirstLine, fm.Now.SecondLine)
 	dbus.UpdateMetadata(m.ins, fm)
 
 	go program.Send(updateDesc(fm))
@@ -179,4 +185,21 @@ type descriptionUpdate string
 
 func updateDesc(fm *metadata.FipMetadata) descriptionUpdate {
 	return descriptionUpdate(fmt.Sprintf("▶ %v - %v", fm.Now.FirstLine, fm.Now.SecondLine))
+}
+
+// render topbar
+func topBar(currentStation string, trackName string, volume int, muted bool) string {
+	var mutedStr string
+	if muted {
+		mutedStr = fmt.Sprintf("Muted(%d)", volume)
+	} else {
+		mutedStr = fmt.Sprintf("Volume %d", volume)
+	}
+	statusStr := header_status_s.Render(currentStation)
+	volumeStr := header_volume_s.Render(mutedStr)
+	centerStr := header_center_s.Copy().
+		Width(width - lipgloss.Width(statusStr) - lipgloss.Width(volumeStr)).
+		Render(trackName)
+	s := lipgloss.JoinHorizontal(lipgloss.Top, statusStr, centerStr, volumeStr)
+	return s
 }
