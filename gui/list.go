@@ -173,27 +173,27 @@ func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
 func setMetadata(m *model) time.Duration {
 	playingItem := m.list.Items()[m.playingItemIndex].(item)
 	fm := metadata.FetchMetadata(playingItem.metadataUrl)
-	m.trackName = fmt.Sprintf("%s - %s", fm.Now.FirstLine, fm.Now.SecondLine)
 	dbus.UpdateMetadata(m.ins, fm)
 
-	go program.Send(updateDesc(fm))
+	go program.Send(updateDesc(m, fm))
 
 	return fm.Delay()
 }
 
 type descriptionUpdate string
 
-func updateDesc(fm *metadata.FipMetadata) descriptionUpdate {
-	return descriptionUpdate(fmt.Sprintf("▶ %v - %v", fm.Now.FirstLine, fm.Now.SecondLine))
+func updateDesc(m *model, fm *metadata.FipMetadata) descriptionUpdate {
+	m.trackName = fmt.Sprintf("▶ %v - %v", fm.Now.FirstLine, fm.Now.SecondLine)
+	return descriptionUpdate(m.trackName)
 }
 
 // render topbar
 func topBar(currentStation string, trackName string, volume int, muted bool) string {
 	var mutedStr string
 	if muted {
-		mutedStr = fmt.Sprintf("Muted(%d)", volume)
+		mutedStr = fmt.Sprintf("Muted(%d%%)", volume)
 	} else {
-		mutedStr = fmt.Sprintf("Volume %d", volume)
+		mutedStr = fmt.Sprintf("Volume %d%%", volume)
 	}
 	statusStr := header_status_s.Render(currentStation)
 	volumeStr := header_volume_s.Render(mutedStr)
