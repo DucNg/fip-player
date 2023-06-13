@@ -22,6 +22,7 @@ var width int
 var program *tea.Program
 
 type item struct {
+	id                                  int
 	title, desc, streamUrl, metadataUrl string
 }
 
@@ -34,7 +35,7 @@ type model struct {
 	mpv              *player.MPV
 	ins              *dbus.Instance
 	metadataLoopChan chan struct{}
-	playingItemIndex int
+	playingItem      item
 	volume           float64
 	trackName        string
 }
@@ -54,10 +55,10 @@ func UpdateMetadataLoop(m *model, delayToRefresh time.Duration) {
 }
 
 func (m *model) Init() tea.Cmd {
-	m.playingItemIndex = m.list.Index()
+	m.playingItem = m.list.SelectedItem().(item)
 	m.volume = 100
 
-	m.mpv.SendCommand([]string{"loadfile", m.list.Items()[m.playingItemIndex].(item).streamUrl})
+	m.mpv.SendCommand([]string{"loadfile", m.playingItem.streamUrl})
 
 	delayToRefresh := setMetadata(m)
 	go UpdateMetadataLoop(m, delayToRefresh)
@@ -75,21 +76,21 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.mpv.ToggleMute()
 			return m, nil
 		case "enter":
-			if m.playingItemIndex == m.list.Index() {
+			newSelectedItem := m.list.SelectedItem().(item)
+			if m.playingItem.id == newSelectedItem.id {
 				break
 			}
 
 			// Reset desc
-			previousItem := m.list.Items()[m.playingItemIndex].(item)
-			previousItem.desc = radios[m.playingItemIndex].(item).desc
-			m.list.SetItem(m.playingItemIndex, previousItem)
+			previousItem := m.playingItem
+			previousItem.desc = radios[m.playingItem.id].(item).desc
+			m.list.SetItem(m.getPlayingItemIndex(), previousItem)
 
 			// Get new selection
-			item := m.list.SelectedItem().(item)
-			m.playingItemIndex = m.list.Index()
+			m.playingItem = m.list.SelectedItem().(item)
 
 			// Change the mpv stream
-			m.mpv.SendCommand([]string{"loadfile", item.streamUrl})
+			m.mpv.SendCommand([]string{"loadfile", m.playingItem.streamUrl})
 
 			// Change the metadata loop url
 			m.metadataLoopChan <- struct{}{} // Stop the existing loop
@@ -107,9 +108,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		width = msg.Width - h
 		m.list.SetSize(msg.Width-h, msg.Height-v-1)
 	case descriptionUpdate:
-		item := m.list.Items()[m.playingItemIndex].(item)
-		item.desc = string(msg)
-		cmd := m.list.SetItem(m.playingItemIndex, item)
+		m.playingItem.desc = string(msg)
+		cmd := m.list.SetItem(m.getPlayingItemIndex(), m.playingItem)
 		return m, cmd
 	}
 
@@ -120,7 +120,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	bar := topBar(
-		m.list.Items()[m.playingItemIndex].(item).title,
+		m.playingItem.title,
 		m.trackName,
 		int(m.volume),
 		m.mpv.IsMute(),
@@ -131,17 +131,14 @@ func (m model) View() string {
 }
 
 // Render creates the GUI and returns last selected radio index on close
-func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
-	guiList := make([]list.Item, len(radios))
-	copy(guiList, radios)
-
+func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioID int) int {
 	m := model{
-		list: list.New(guiList, list.NewDefaultDelegate(), 0, 0),
+		list: list.New(getRadiosWithIDs(), list.NewDefaultDelegate(), 0, 0),
 		mpv:  mpv,
 		ins:  ins,
 	}
 
-	m.list.Select(lastRadioIndex)
+	m.list.Select(getIndexFromID(m.list, lastRadioID))
 	m.list.SetShowTitle(false)
 	m.list.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{
@@ -167,12 +164,11 @@ func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioIndex int) int {
 		log.Fatalln(err)
 	}
 
-	return m.playingItemIndex
+	return m.playingItem.id
 }
 
 func setMetadata(m *model) time.Duration {
-	playingItem := m.list.Items()[m.playingItemIndex].(item)
-	fm := metadata.FetchMetadata(playingItem.metadataUrl)
+	fm := metadata.FetchMetadata(m.playingItem.metadataUrl)
 	dbus.UpdateMetadata(m.ins, fm)
 
 	go program.Send(updateDesc(m, fm))
@@ -202,4 +198,29 @@ func topBar(currentStation string, trackName string, volume int, muted bool) str
 		Render(trackName)
 	s := lipgloss.JoinHorizontal(lipgloss.Top, statusStr, centerStr, volumeStr)
 	return s
+}
+
+func (m model) getPlayingItemIndex() int {
+	return getIndexFromID(m.list, m.playingItem.id)
+}
+
+func getIndexFromID(list list.Model, id int) int {
+	for i := 0; i < len(list.Items()); i++ {
+		if list.Items()[i].(item).id == id {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func getRadiosWithIDs() []list.Item {
+	radiosWithIDs := make([]list.Item, len(radios))
+	for i := 0; i < len(radios); i++ {
+		itemWithID := radios[i].(item)
+		itemWithID.id = i
+		radiosWithIDs[i] = itemWithID
+	}
+
+	return radiosWithIDs
 }

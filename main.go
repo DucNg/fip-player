@@ -26,11 +26,11 @@ func main() {
 	ins := dbus.CreateDbusInstance(mpv)
 	defer ins.CloseConnection()
 
-	indexOnClose := gui.Render(ins, mpv, getLastRadioIndex())
+	IDOnClose := gui.Render(ins, mpv, getLastRadioID())
 
-	err := os.WriteFile(lastRadioIndexPath(), []byte(fmt.Sprintf("%v", indexOnClose)), 0666)
+	err := os.WriteFile(lastRadioIDPath(), []byte(fmt.Sprintf("%v", IDOnClose)), 0666)
 	if err != nil {
-		log.Printf("failed to write last buffer at %q: %s\n", lastRadioIndexPath(), err)
+		log.Printf("failed to write last buffer at %q: %s\n", lastRadioIDPath(), err)
 	}
 }
 
@@ -68,12 +68,12 @@ func cachePath() string {
 	return cache
 }
 
-func lastRadioIndexPath() string {
+func lastRadioIDPath() string {
 	return path.Join(cachePath(), "lastradioindex.txt")
 }
 
-func getLastRadioIndex() int {
-	indexBytes, err := os.ReadFile(lastRadioIndexPath())
+func getLastRadioID() int {
+	indexBytes, err := os.ReadFile(lastRadioIDPath())
 	if err != nil {
 		return 0
 	}
