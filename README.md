@@ -40,7 +40,7 @@ dnf install mpv-devel
 
 ### Use pre builds
 
-[**Download latest release**](https://github.com/DucNg/fip-player/releases/download/latest/fip-player)
+[**Download latest release**](https://github.com/DucNg/fip-player/releases/latest/download/fip-player)
 
 Make the binary file executable:
 
@@ -50,7 +50,7 @@ chmod +x fip-player
 ```
 
 Install system-wide:
-  
+
 ```shell
 sudo cp fip-player /usr/local/bin
 ```
