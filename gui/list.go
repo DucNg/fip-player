@@ -13,11 +13,17 @@ import (
 	"github.com/DucNg/fip-player/player"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 var width int
+
+const (
+	topBarHeight      = 1
+	progressBarHeight = 2
+)
 
 var program *tea.Program
 
@@ -38,6 +44,8 @@ type model struct {
 	playingItem      item
 	volume           float64
 	trackName        string
+	ValueOfOneSecond float64
+	progress         progress.Model
 }
 
 func UpdateMetadataLoop(m *model, delayToRefresh time.Duration) {
@@ -63,7 +71,7 @@ func (m *model) Init() tea.Cmd {
 	delayToRefresh := setMetadata(m)
 	go UpdateMetadataLoop(m, delayToRefresh)
 
-	return nil
+	return tickCmd()
 }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -105,11 +113,24 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
+
 		width = msg.Width - h
-		m.list.SetSize(msg.Width-h, msg.Height-v-1)
+		height := msg.Height - v - topBarHeight - progressBarHeight
+
+		m.list.SetSize(width, height)
+		m.progress.Width = width
 	case descriptionUpdate:
 		m.playingItem.desc = string(msg)
 		cmd := m.list.SetItem(m.getPlayingItemIndex(), m.playingItem)
+		return m, cmd
+
+	// Progress bar
+	case tickMsg:
+		cmd := m.progress.IncrPercent(m.ValueOfOneSecond)
+		return m, tea.Batch(tickCmd(), cmd)
+	case progress.FrameMsg:
+		progressModel, cmd := m.progress.Update(msg)
+		m.progress = progressModel.(progress.Model)
 		return m, cmd
 	}
 
@@ -126,16 +147,17 @@ func (m model) View() string {
 		m.mpv.IsMute(),
 	)
 
-	out := bar + "\n" + m.list.View()
+	out := bar + "\n" + m.list.View() + "\n" + m.progress.View()
 	return docStyle.Render(out)
 }
 
 // Render creates the GUI and returns last selected radio index on close
 func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioID int) int {
 	m := model{
-		list: list.New(getRadiosWithIDs(), list.NewDefaultDelegate(), 0, 0),
-		mpv:  mpv,
-		ins:  ins,
+		list:     list.New(getRadiosWithIDs(), list.NewDefaultDelegate(), 0, 0),
+		mpv:      mpv,
+		ins:      ins,
+		progress: progress.New(progress.WithDefaultGradient(), progress.WithoutPercentage()),
 	}
 
 	m.list.Select(getIndexFromID(m.list, lastRadioID))
@@ -170,6 +192,9 @@ func Render(ins *dbus.Instance, mpv *player.MPV, lastRadioID int) int {
 func setMetadata(m *model) time.Duration {
 	fm := metadata.FetchMetadata(m.playingItem.metadataUrl)
 	dbus.UpdateMetadata(m.ins, fm)
+
+	m.ValueOfOneSecond = fm.ValueOfOneSecond()
+	m.progress.SetPercent(fm.ProgressPercent())
 
 	go program.Send(updateDesc(m, fm))
 
@@ -223,4 +248,12 @@ func getRadiosWithIDs() []list.Item {
 	}
 
 	return radiosWithIDs
+}
+
+type tickMsg time.Time
+
+func tickCmd() tea.Cmd {
+	return tea.Tick(time.Second*1, func(t time.Time) tea.Msg {
+		return tickMsg(t)
+	})
 }

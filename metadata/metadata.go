@@ -26,6 +26,7 @@ type FipMetadata struct {
 		Cover struct {
 			Src string
 		}
+		NowTime uint
 	}
 	Media struct {
 		StartTime uint
@@ -74,4 +75,18 @@ func (fm *FipMetadata) ContentCreated() string {
 	}
 
 	return parsedYear.Format(time.RFC3339)
+}
+
+func (fm *FipMetadata) ProgressPercent() float64 {
+	duration := fm.Media.EndTime - fm.Media.StartTime
+	position := fm.Now.NowTime - fm.Media.StartTime
+
+	progress := float64(position) / float64(duration)
+
+	return progress
+}
+
+func (fm *FipMetadata) ValueOfOneSecond() float64 {
+	duration := fm.Media.EndTime - fm.Media.StartTime
+	return (100 / float64(duration)) / 100
 }
