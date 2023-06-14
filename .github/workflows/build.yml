@@ -1,6 +1,10 @@
 name: Build fip-player
 run-name: Building fip-player
-on: [push]
+on:
+  push:
+    branches:
+    - master
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,10 +13,13 @@ jobs:
       - run: sudo apt install golang libmpv-dev
       - uses: actions/checkout@v3
       - run: go build .
+      - name: Set uuid
+        id: vars
+        run: echo "uuid=$(uuidgen)" >> $GITHUB_OUTPUT
       - uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Nightly build"
+          automatic_release_tag: "${{ steps.vars.outputs.uuid }}"
+          prerelease: false
+          title: "Nightly build of ${{ steps.vars.outputs.uuid }}"
           files: fip-player
