@@ -7,7 +7,7 @@ import (
 // IntrospectNode returns the root node of the library's introspection output.
 func IntrospectNode() *introspect.Node {
 	return &introspect.Node{
-		Name: "fip-player",
+		Name: "fipplayer",
 		Interfaces: []introspect.Interface{
 			introspect.IntrospectData,
 			{
