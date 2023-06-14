@@ -47,7 +47,7 @@ func CreateDbusInstance(mpv *player.MPV) *Instance {
 		log.Fatalln(err)
 	}
 
-	reply, err := conn.RequestName("org.mpris.MediaPlayer2.fip-player", dbus.NameFlagReplaceExisting)
+	reply, err := conn.RequestName("org.mpris.MediaPlayer2.fipplayer", dbus.NameFlagReplaceExisting)
 	if err != nil {
 		log.Fatalln(err)
 	}
