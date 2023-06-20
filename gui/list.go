@@ -22,7 +22,7 @@ var width int
 
 const (
 	topBarHeight      = 1
-	progressBarHeight = 2
+	progressBarHeight = 3
 )
 
 var program *tea.Program
@@ -126,6 +126,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Progress bar
 	case tickMsg:
+		// Sometimes delayToRefresh is not perfectly accurate
+		// it's better to set progress bar to 0% in this case
+		if m.progress.Percent() >= 1.0 {
+			m.progress.SetPercent(0)
+		}
+
 		cmd := m.progress.IncrPercent(m.ValueOfOneSecond)
 		return m, tea.Batch(tickCmd(), cmd)
 	case progress.FrameMsg:
@@ -147,7 +153,10 @@ func (m model) View() string {
 		m.mpv.IsMute(),
 	)
 
-	out := bar + "\n" + m.list.View() + "\n" + m.progress.View()
+	out := bar + "\n" +
+		m.list.View() + "\n\n" +
+		m.progress.View()
+
 	return docStyle.Render(out)
 }
 
