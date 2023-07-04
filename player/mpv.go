@@ -55,8 +55,6 @@ func (mpv *MPV) Initialize() {
 	mpv.handle = C.mpv_create()
 
 	mpv.setOptionFlag("resume-playback", false)
-	//mpv.setOptionString("softvol", "yes")
-	//mpv.setOptionString("ao", "pulse")
 	mpv.setOptionInt("volume", 100)
 	mpv.setOptionInt("volume-max", 100)
 
@@ -65,11 +63,7 @@ func (mpv *MPV) Initialize() {
 	mpv.setOptionString("vo", "null")
 	mpv.setOptionString("vid", "no")
 
-	// Cache settings assume 128kbps audio stream (16kByte/s).
-	// The default is a cache size of 25MB, these are somewhat more sensible
-	// cache sizes IMO.
-	mpv.setOptionInt("cache-secs", 10) // 10 seconds
-	// mpv.setOptionInt("cache-seek-min", 16) // 1 second
+	mpv.setOptionInt("cache-secs", 3)
 
 	// Some extra debugging information, but don't read from stdin.
 	// libmpv has a problem with signal handling, though: when `terminal` is

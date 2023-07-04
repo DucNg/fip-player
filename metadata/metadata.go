@@ -26,6 +26,7 @@ type FipMetadata struct {
 		Cover struct {
 			Src string
 		}
+		NowTime uint
 	}
 	Media struct {
 		StartTime uint
@@ -68,10 +69,43 @@ func (fm *FipMetadata) Delay() time.Duration {
 }
 
 func (fm *FipMetadata) ContentCreated() string {
+	// Between songs, sometimes, API sends a generic name without year
+	if fm.Now.Song.Year == 0 {
+		return ""
+	}
+
 	parsedYear, err := time.Parse("2006", fmt.Sprintf("%v", fm.Now.Song.Year))
 	if err != nil {
 		log.Println(err)
 	}
 
 	return parsedYear.Format(time.RFC3339)
+}
+
+func (fm *FipMetadata) ProgressPercent() float64 {
+	// Between songs, sometimes, API sends a generic name without startTime/endTime
+	// To get a more accurate progress bar in this case, progress needs to be set to 0%
+	if fm.Media.EndTime == 0 || fm.Media.StartTime == 0 {
+		return 0
+	}
+
+	duration := fm.Media.EndTime - fm.Media.StartTime
+	position := fm.Now.NowTime - fm.Media.StartTime
+
+	progress := float64(position) / float64(duration)
+
+	return progress
+}
+
+func (fm *FipMetadata) ValueOfOneSecond() float64 {
+	var duration float64
+
+	// Between songs, sometimes, API sends a generic name without startTime/endTime
+	if fm.Media.EndTime == 0 || fm.Media.StartTime == 0 {
+		duration = float64(fm.DelayToRefresh) / 1000
+	} else {
+		duration = float64(fm.Media.EndTime - fm.Media.StartTime)
+	}
+
+	return (100 / duration) / 100
 }
