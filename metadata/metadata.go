@@ -98,6 +98,14 @@ func (fm *FipMetadata) ProgressPercent() float64 {
 }
 
 func (fm *FipMetadata) ValueOfOneSecond() float64 {
-	duration := fm.Media.EndTime - fm.Media.StartTime
-	return (100 / float64(duration)) / 100
+	var duration float64
+
+	// Between songs, sometimes, API sends a generic name without startTime/endTime
+	if fm.Media.EndTime == 0 || fm.Media.StartTime == 0 {
+		duration = float64(fm.DelayToRefresh) / 1000
+	} else {
+		duration = float64(fm.Media.EndTime - fm.Media.StartTime)
+	}
+
+	return (100 / duration) / 100
 }
