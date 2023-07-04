@@ -132,6 +132,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.progress.SetPercent(0)
 		}
 
+		dbus.IncrementPosition(m.ins)
 		cmd := m.progress.IncrPercent(m.ValueOfOneSecond)
 		return m, tea.Batch(tickCmd(), cmd)
 	case progress.FrameMsg:
