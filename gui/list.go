@@ -80,12 +80,16 @@ func (m *model) Init() tea.Cmd {
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// Disable keybinds when filtering
+		if m.list.FilterState() == list.Filtering {
+			break
+		}
+
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "m":
 			m.mpv.ToggleMute()
-			return m, nil
 		case "enter":
 			newSelectedItem := m.list.SelectedItem().(item)
 			if m.playingItem.id == newSelectedItem.id {
