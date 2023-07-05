@@ -16,13 +16,16 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/reflow/truncate"
 )
 
+// Usable width in terminal
 var width int
 
 const (
 	topBarHeight      = 1
 	progressBarHeight = 3
+	ellipsis          = "…"
 )
 
 var program *tea.Program
@@ -227,6 +230,10 @@ func topBar(currentStation string, trackName string, volume int, muted bool) str
 	}
 	statusStr := header_status_s.Render(currentStation)
 	volumeStr := header_volume_s.Render(mutedStr)
+
+	maxTrackNameWidth := width - lipgloss.Width(statusStr) - lipgloss.Width(volumeStr)
+	trackName = truncate.StringWithTail(trackName, uint(maxTrackNameWidth), ellipsis)
+
 	centerStr := header_center_s.Copy().
 		Width(width - lipgloss.Width(statusStr) - lipgloss.Width(volumeStr)).
 		Render(trackName)
