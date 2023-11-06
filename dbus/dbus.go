@@ -3,6 +3,7 @@ package dbus
 import (
 	"log"
 	"strings"
+	"time"
 
 	"github.com/DucNg/fip-player/metadata"
 	"github.com/DucNg/fip-player/player"
@@ -93,6 +94,37 @@ func UpdateMetadata(ins *Instance, fm *metadata.FipMetadata) {
 	)
 	if dbusErr != nil {
 		log.Println(dbusErr, metadata)
+	}
+
+	position := time.Duration(fm.Now.NowTime-fm.Media.StartTime) * time.Millisecond
+	dbusErr = ins.props.Set(
+		"org.mpris.MediaPlayer2.Player",
+		"Position",
+		dbus.MakeVariant(int64(position)),
+	)
+	if dbusErr != nil {
+		log.Println(dbusErr)
+	}
+}
+
+func IncrementPosition(ins *Instance) {
+	previousPosition, dbusErr := ins.props.Get(
+		"org.mpris.MediaPlayer2.Player",
+		"Position",
+	)
+	if dbusErr != nil {
+		log.Println(dbusErr)
+	}
+
+	newPosition := previousPosition.Value().(int64) + 1e+6
+
+	dbusErr = ins.props.Set(
+		"org.mpris.MediaPlayer2.Player",
+		"Position",
+		dbus.MakeVariant(int64(newPosition)),
+	)
+	if dbusErr != nil {
+		log.Println(dbusErr)
 	}
 }
 
