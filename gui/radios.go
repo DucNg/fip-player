@@ -76,10 +76,28 @@ var radios = []list.Item{
 		metadataUrl: "https://www.radiofrance.fr/fip/api/live/webradios/fip_nouveautes",
 	},
 	item{
+		title:       "FIP Sacré français !",
+		desc:        "Découvrez le meilleur de la musique francophone gratuitement et sans pub : de Brassens à Orelsan, du Canada à l'Afrique, écoutez la sélection à la française des programmateurs de Fip.",
+		streamUrl:   "https://stream.radiofrance.fr/fipsacrefrancais/fipsacrefrancais_hifi.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/fip/api/live/webradios/fip_sacre_francais",
+	},
+	item{
+		title:       "France Musique",
+		desc:        "Tout l'univers de la musique Classique, Jazz, Contemporaine et plus.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusique/francemusique_hifi.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/francemusique/api/live/webradios/francemusique",
+	},
+	item{
 		title:       "Classique Easy",
 		desc:        "La meilleure radio classique : les plus belles œuvres.",
 		streamUrl:   "https://stream.radiofrance.fr/francemusiqueeasyclassique/francemusiqueeasyclassique_hifi.m3u8?id=radiofrance",
 		metadataUrl: "https://www.radiofrance.fr/francemusique/api/live/webradios/francemusique_classique_easy",
+	},
+	item{
+		title:       "Piano Zen",
+		desc:        "Vous voulez vous détendre ? Écoutez notre webradio « Piano Zen » qui explore plusieurs styles de piano, du classique au jazz. Alors, évadez-vous, laissez-vous porter et la musique… vous relaxer.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusiquepianozen/francemusiquepianozen_hifi.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/francemusique/api/live/webradios/francemusique_piano_zen",
 	},
 	item{
 		title:       "Opéra",
@@ -116,5 +134,11 @@ var radios = []list.Item{
 		desc:        "Des pépites musicales traditionnelles du monde entier.",
 		streamUrl:   "https://stream.radiofrance.fr/francemusiqueocoramonde/francemusiqueocoramonde.m3u8?id=radiofrance",
 		metadataUrl: "https://www.radiofrance.fr/francemusique/api/live/webradios/francemusique_ocora_monde",
+	},
+	item{
+		title:       "Musique de Films",
+		desc:        "Écoutez les musiques de films les plus géniales avec la radio Musique de Films de France Musique, une sélection unique de musiques de cinéma connues et plus rares.",
+		streamUrl:   "https://stream.radiofrance.fr/francemusiquelabo/francemusiquelabo_hifi.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/francemusique/api/live/webradios/francemusique_evenementielle",
 	},
 }

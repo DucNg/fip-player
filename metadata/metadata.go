@@ -12,8 +12,12 @@ import (
 type FipMetadata struct {
 	DelayToRefresh uint
 	Now            struct {
-		FirstLine  string
-		SecondLine string
+		FirstLine struct  {
+			Title string
+		}
+		SecondLine struct {
+			Title string
+		}
 		Song       struct {
 			Id      string
 			Year    uint
