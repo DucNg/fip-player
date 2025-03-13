@@ -33,6 +33,7 @@ var program *tea.Program
 type item struct {
 	id                                  int
 	title, desc, streamUrl, metadataUrl string
+	favorite                            bool
 }
 
 func (i item) Title() string       { return i.title }
@@ -40,15 +41,16 @@ func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
 type model struct {
-	list             list.Model
-	mpv              *player.MPV
-	ins              *dbus.Instance
-	metadataLoopChan chan struct{}
-	playingItem      item
-	volume           float64
-	trackName        string
-	ValueOfOneSecond float64
-	progress         progress.Model
+	list                  list.Model
+	mpv                   *player.MPV
+	ins                   *dbus.Instance
+	metadataLoopChan      chan struct{}
+	playingItem           item
+	volume                float64
+	trackName             string
+	ValueOfOneSecond      float64
+	progress              progress.Model
+	isFavoriteModeEnabled bool
 }
 
 func UpdateMetadataLoop(m *model, delayToRefresh time.Duration) {
@@ -117,6 +119,11 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.volume -= 5
 			}
 			m.mpv.SetVolume(m.volume)
+		case "f":
+			m.toggleFavoriteList()
+		case tea.KeySpace.String():
+			log.Println("space bar pressed")
+			m.toggleSelectedItemAsFavorite()
 		}
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
@@ -217,6 +224,7 @@ func setMetadata(m *model) time.Duration {
 	return fm.Delay()
 }
 
+type titleUpdate string
 type descriptionUpdate string
 
 func updateDesc(m *model, fm *metadata.FipMetadata) descriptionUpdate {
