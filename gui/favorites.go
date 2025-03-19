@@ -2,7 +2,9 @@ package gui
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/DucNg/fip-player/cache"
 	"github.com/charmbracelet/bubbles/list"
 )
 
@@ -10,9 +12,17 @@ import (
 func filterFavoriteRadios(items []list.Item) []list.Item {
 	var favorites []list.Item
 
+	favoritesIDs := cache.GetFavoritesRadioIDs()
+	if favoritesIDs == nil {
+		log.Println("failed to read favorites from file")
+		return nil
+	}
+
 	for _, itm := range items {
-		if itm.(item).favorite {
-			favorites = append(favorites, itm)
+		for _, favoritesID := range favoritesIDs {
+			if itm.(item).id == favoritesID {
+				favorites = append(favorites, itm)
+			}
 		}
 	}
 
@@ -49,9 +59,11 @@ func (m *model) toggleSelectedItemAsFavorite() {
 
 	if itemToToggle.favorite {
 		itemToToggle.favorite = false
+		cache.RemoveRadioIDFromFavorites(itemToToggle.id)
 		itemToToggle.title = itemToToggle.title[:len(itemToToggle.title)-len(" ❤️")]
 	} else {
 		itemToToggle.favorite = true
+		cache.AddRadioIDToFavorites(itemToToggle.id)
 		itemToToggle.title = fmt.Sprintf("%v ❤️", itemToToggle.title)
 	}
 
