@@ -2,13 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"os"
-	"path"
-	"strconv"
 
+	"github.com/DucNg/fip-player/cache"
 	"github.com/DucNg/fip-player/dbus"
 	"github.com/DucNg/fip-player/gui"
 	"github.com/DucNg/fip-player/player"
@@ -26,12 +24,8 @@ func main() {
 	ins := dbus.CreateDbusInstance(mpv)
 	defer ins.CloseConnection()
 
-	IDOnClose := gui.Render(ins, mpv, getLastRadioID())
-
-	err := os.WriteFile(lastRadioIDPath(), []byte(fmt.Sprintf("%v", IDOnClose)), 0666)
-	if err != nil {
-		log.Printf("failed to write last buffer at %q: %s\n", lastRadioIDPath(), err)
-	}
+	IDOnClose := gui.Render(ins, mpv, cache.GetLastRadioID())
+	cache.WriteLastRadioID(IDOnClose)
 }
 
 func enableDebugLogs() *os.File {
@@ -53,35 +47,4 @@ func enableDebugLogs() *os.File {
 	log.SetOutput(logFile)
 
 	return logFile
-}
-
-func cachePath() string {
-	cacheDir, err := os.UserCacheDir()
-	if err != nil {
-		panic(err)
-	}
-	cache := path.Join(cacheDir, "fip-player")
-	err = os.MkdirAll(cache, 0755)
-	if err != nil {
-		panic(err)
-	}
-	return cache
-}
-
-func lastRadioIDPath() string {
-	return path.Join(cachePath(), "lastradioindex.txt")
-}
-
-func getLastRadioID() int {
-	indexBytes, err := os.ReadFile(lastRadioIDPath())
-	if err != nil {
-		return 0
-	}
-
-	index, err := strconv.Atoi(string(indexBytes))
-	if err != nil {
-		return 0
-	}
-
-	return index
 }
