@@ -71,7 +71,7 @@ func GetMetadataMap(fm *metadata.FipMetadata) MetadataMap {
 	m := &MetadataMap{
 		"mpris:trackid": dbus.ObjectPath(trackId),
 		"mpris:length":  fm.Duration(),
-		"mpris:artUrl":  fm.Now.Cover.Src,
+		"mpris:artUrl":  fm.Now.Visuals.Card.Src,
 
 		"xesam:album":          fm.Now.Song.Release.Title,
 		"xesam:albumArtist":    []string{fm.Now.SecondLine.Title},

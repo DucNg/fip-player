@@ -1,0 +1,27 @@
+{
+    "delayToRefresh": 3000,
+    "now": {
+        "startTime": 0,
+        "endTime": 0,
+        "firstLine": {
+            "title": "Error reading metadata"
+        },
+        "secondLine": {
+            "title": "Error reading metadata"
+        },
+        "song": {
+            "id": "",
+            "year": 0,
+            "release": {
+                "label": "",
+                "title": "",
+                "reference": ""
+            }
+        },
+        "visuals": {
+            "card": {
+                "src": ""
+            }
+        }
+    }
+}

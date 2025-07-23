@@ -7,18 +7,25 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	_ "embed"
 )
+
+//go:embed fallback.json
+var FallbackMetadata []byte
 
 type FipMetadata struct {
 	DelayToRefresh uint
 	Now            struct {
-		FirstLine struct  {
+		StartTime uint
+		EndTime   uint
+		FirstLine struct {
 			Title string
 		}
 		SecondLine struct {
 			Title string
 		}
-		Song       struct {
+		Song struct {
 			Id      string
 			Year    uint
 			Release struct {
@@ -27,14 +34,11 @@ type FipMetadata struct {
 				Reference string
 			}
 		}
-		Cover struct {
-			Src string
+		Visuals struct {
+			Card struct {
+				Src string
+			}
 		}
-		NowTime uint
-	}
-	Media struct {
-		StartTime uint
-		EndTime   uint
 	}
 }
 
@@ -52,20 +56,20 @@ func FetchMetadata(url string) *FipMetadata {
 	var metadata FipMetadata
 	err = json.Unmarshal(jsonRes, &metadata)
 	if err != nil {
-		log.Fatalln(err.Error())
-	}
+		// API sent strange data, fallback to safe values and retry in 3 seconds
+		log.Printf("Error unmarshalling metadata, falling back to safe values, API payload: %v", string(jsonRes))
 
-	// Trying to debug FIP API sending strange data
-	log.Printf("Delay to refresh %d\n", metadata.DelayToRefresh)
-	if metadata.DelayToRefresh >= 1000000 {
-		log.Println(string(jsonRes))
+		err = json.Unmarshal(FallbackMetadata, &metadata)
+		if err != nil {
+			log.Fatalf("error unmarshalling fallback metadata: %v", err.Error())
+		}
 	}
 
 	return &metadata
 }
 
 func (fm *FipMetadata) Duration() time.Duration {
-	return time.Duration(fm.Media.EndTime-fm.Media.StartTime) * time.Millisecond
+	return time.Duration(fm.Now.EndTime-fm.Now.StartTime) * time.Millisecond
 }
 
 func (fm *FipMetadata) Delay() time.Duration {
@@ -89,12 +93,12 @@ func (fm *FipMetadata) ContentCreated() string {
 func (fm *FipMetadata) ProgressPercent() float64 {
 	// Between songs, sometimes, API sends a generic name without startTime/endTime
 	// To get a more accurate progress bar in this case, progress needs to be set to 0%
-	if fm.Media.EndTime == 0 || fm.Media.StartTime == 0 {
+	if fm.Now.EndTime == 0 || fm.Now.StartTime == 0 {
 		return 0
 	}
 
-	duration := fm.Media.EndTime - fm.Media.StartTime
-	position := fm.Now.NowTime - fm.Media.StartTime
+	duration := fm.Now.EndTime - fm.Now.StartTime
+	position := uint(time.Now().UnixMilli()) - fm.Now.StartTime
 
 	progress := float64(position) / float64(duration)
 
@@ -105,10 +109,10 @@ func (fm *FipMetadata) ValueOfOneSecond() float64 {
 	var duration float64
 
 	// Between songs, sometimes, API sends a generic name without startTime/endTime
-	if fm.Media.EndTime == 0 || fm.Media.StartTime == 0 {
+	if fm.Now.EndTime == 0 || fm.Now.StartTime == 0 {
 		duration = float64(fm.DelayToRefresh) / 1000
 	} else {
-		duration = float64(fm.Media.EndTime - fm.Media.StartTime)
+		duration = float64(fm.Now.EndTime - fm.Now.StartTime)
 	}
 
 	return (100 / duration) / 100
