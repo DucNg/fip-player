@@ -1,5 +1,5 @@
 {
-    "delayToRefresh": 3000,
+    "delayToRefresh": 60000,
     "now": {
         "startTime": 0,
         "endTime": 0,
