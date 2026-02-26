@@ -28,6 +28,12 @@ var radios = []list.Item{
 		metadataUrl: "https://www.radiofrance.fr/fip/api/live?",
 	},
 	item{
+		title:       "FIP Cultes",
+		desc:        "En illimité, une webradio dédiée uniquement aux titres cultes qui ont fait l’histoire et continuent de faire vibrer le présent.",
+		streamUrl:   "https://stream.radiofrance.fr/fipcultes/fipcultes_hifi.m3u8?id=radiofrance",
+		metadataUrl: "https://www.radiofrance.fr/fip/api/live?webradio=fip_cultes",
+	},
+	item{
 		title:       "FIP Électro",
 		desc:        "Un mix de titres inédits, de nouveautés et de grands classiques comme Cassius, Superpoze, Tosca.",
 		streamUrl:   "https://stream.radiofrance.fr/fipelectro/fipelectro_hifi.m3u8?id=radiofrance",
