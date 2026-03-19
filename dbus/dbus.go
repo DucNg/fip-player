@@ -71,13 +71,13 @@ func GetMetadataMap(fm *metadata.FipMetadata) MetadataMap {
 	m := &MetadataMap{
 		"mpris:trackid": dbus.ObjectPath(trackId),
 		"mpris:length":  fm.Duration(),
-		"mpris:artUrl":  fm.Now.Visuals.Card.Src + "/1280",
+		"mpris:artUrl":  "https://www.radiofrance.fr/pikapi/images/" + fm.Now.Cover.Id + "/1280",
 
 		"xesam:album":          fm.Now.Song.Release.Title,
-		"xesam:albumArtist":    []string{fm.Now.SecondLine.Title},
-		"xesam:artist":         []string{fm.Now.SecondLine.Title},
+		"xesam:albumArtist":    []string{fm.Now.Artist},
+		"xesam:artist":         []string{fm.Now.Artist},
 		"xesam:contentCreated": fm.ContentCreated(),
-		"xesam:title":          fm.Now.FirstLine.Title,
+		"xesam:title":          fm.Now.Title,
 	}
 
 	return *m

@@ -1,29 +1,22 @@
 package metadata
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"time"
-
-	_ "embed"
 )
-
-//go:embed fallback.json
-var FallbackMetadata []byte
 
 type FipMetadata struct {
 	DelayToRefresh uint
 	Now            struct {
 		StartTime uint
 		EndTime   uint
-		FirstLine struct {
-			Title string
-		}
-		SecondLine struct {
-			Title string
+		Title     string // track/song name (API: firstLine)
+		Artist    string // artist name (API: secondLine)
+		Cover     struct {
+			Id string // UUID used to construct cover art URL
 		}
 		Song struct {
 			Id      string
@@ -32,11 +25,6 @@ type FipMetadata struct {
 				Title     string
 				Label     string
 				Reference string
-			}
-		}
-		Visuals struct {
-			Card struct {
-				Src string
 			}
 		}
 	}
@@ -53,19 +41,15 @@ func FetchMetadata(url string) *FipMetadata {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	var metadata FipMetadata
-	err = json.Unmarshal(jsonRes, &metadata)
+
+	fm, err := parseAPIResponse(jsonRes)
 	if err != nil {
 		// API sent strange data, fallback to safe values and retry in 3 seconds
-		log.Printf("Error unmarshalling metadata, falling back to safe values, API payload: %v", string(jsonRes))
-
-		err = json.Unmarshal(FallbackMetadata, &metadata)
-		if err != nil {
-			log.Fatalf("error unmarshalling fallback metadata: %v", err.Error())
-		}
+		log.Printf("Error parsing metadata, falling back to safe values, API payload: %v", string(jsonRes))
+		return fallbackFipMetadata()
 	}
 
-	return &metadata
+	return fm
 }
 
 func (fm *FipMetadata) Duration() time.Duration {

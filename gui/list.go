@@ -220,7 +220,7 @@ func setMetadata(m *model) time.Duration {
 type descriptionUpdate string
 
 func updateDesc(m *model, fm *metadata.FipMetadata) descriptionUpdate {
-	m.trackName = fmt.Sprintf("▶ %v - %v", fm.Now.FirstLine.Title, fm.Now.SecondLine.Title)
+	m.trackName = fmt.Sprintf("▶ %v - %v", fm.Now.Title, fm.Now.Artist)
 	return descriptionUpdate(m.trackName)
 }
 
