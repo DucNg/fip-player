@@ -10,7 +10,7 @@ import (
 const baseURL = "https://www.radiofrance.fr/_app/remote/di23tz/getLive?payload="
 
 func forgePayload(brandName string) string {
-	json := fmt.Sprintf("[{\"brandName\":1},\"%v\"]", brandName)
+	json := fmt.Sprintf("[{\"brandName\":1, \"version\": 2},\"%v\", \"2026-05-12\"]", brandName)
 
 	return base64.StdEncoding.EncodeToString([]byte(json))
 }
