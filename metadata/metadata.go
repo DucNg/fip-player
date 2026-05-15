@@ -31,6 +31,15 @@ type FipMetadata struct {
 }
 
 func FetchMetadata(url string) *FipMetadata {
+	// WORKAROUND: API is replying with the previous metadata on the first request.
+	// Perform the request twice as a workaround. Caching issue on the CDN?
+	_, err := http.Get(url)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	time.Sleep(1 * time.Second)
+
 	res, err := http.Get(url)
 	if err != nil {
 		log.Fatalln(err.Error())
