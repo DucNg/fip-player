@@ -82,7 +82,7 @@ func (fm *FipMetadata) ProgressPercent() float64 {
 	}
 
 	duration := fm.Now.EndTime - fm.Now.StartTime
-	position := uint(time.Now().UnixMilli()) - fm.Now.StartTime
+	position := uint(time.Now().Unix()) - fm.Now.StartTime
 
 	progress := float64(position) / float64(duration)
 
